@@ -470,7 +470,7 @@ def process_case(ct_path, label_path, output_dir, case_id):
     for d in [npy_dir, img_dir, mask_dir]:
         os.makedirs(d, exist_ok=True)
 
-    clean_case_id = case_id.replace('_0000', '')
+    clean_case_id = case_id.removesuffix('_0000') if case_id.endswith('_0000') else case_id #clean_case_id = case_id.replace('_0000', '')
     tensor_out_path = os.path.join(npy_dir, f"{clean_case_id}_tensor_128_27ch.npy")
     np.save(tensor_out_path, tensor_with_label)
     logger.info(f"Successfully saved normalized 28-channel tensor -> {tensor_out_path}")
