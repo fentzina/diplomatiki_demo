@@ -441,10 +441,18 @@ def main():
     args = parser.parse_args()
 
     # Find CT files
-    ct_patterns = [os.path.join(args.ct_dir, "*.nii"), os.path.join(args.ct_dir, "*.nii.gz")]
-    ct_files = []
-    for pattern in ct_patterns:
-        ct_files.extend(glob.glob(pattern))
+    #ct_patterns = [os.path.join(args.ct_dir, "*.nii"), os.path.join(args.ct_dir, "*.nii.gz")]
+    #ct_files = []
+    #for pattern in ct_patterns: ct_files.extend(glob.glob(pattern))
+    
+    # Find CT files (supports both a folder path or a direct file path)
+    if os.path.isfile(args.ct_dir):
+        ct_files = [args.ct_dir]
+    else:
+        ct_patterns = [os.path.join(args.ct_dir, "*.nii"), os.path.join(args.ct_dir, "*.nii.gz")]
+        ct_files = []
+        for pattern in ct_patterns:
+            ct_files.extend(glob.glob(pattern))
 
     # Find Label files
     label_patterns = [os.path.join(args.label_dir, "**", "*.nii"), os.path.join(args.label_dir, "**", "*.nii.gz")]
