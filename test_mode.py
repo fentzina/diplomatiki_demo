@@ -110,9 +110,17 @@ assert len(all_ct_files) > 0, "No .nii.gz files found — check ZENODO_BATCH_URL
 if not os.path.isdir('panorama_labels'):
     os.system('git clone https://github.com/DIAGNijmegen/panorama_labels.git')
 
+#def _case_id(path):
+    #b = os.path.basename(path)
+    #return b.replace('.nii.gz', '').replace('.nii', '')
+
 def _case_id(path):
-    b = os.path.basename(path)
-    return b.replace('.nii.gz', '').replace('.nii', '')
+    b = os.path.basename(path).replace(".nii.gz", "").replace(".nii", "")
+    parts = b.split("_")
+    if len(parts) > 2 and parts[-1].isdigit() and len(parts[-1]) == 4:
+        return "_".join(parts[:-1])
+    return b
+
 
 label_nii_files = (
     glob.glob(os.path.join('panorama_labels', '**', '*.nii'), recursive=True) +
