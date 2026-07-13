@@ -50,18 +50,18 @@ import glob
 import zipfile
 
 # ── 1. Ρύθμιση Μονοπατιών για τον Server ──────────────────────────────────────
-BASE_DIR = os.environ.get('COLLAGE_BASE_DIR', 'C:\\Users\\ser\\OneDrive\\Υπολογιστής\\test_mode')
+BASE_DIR = os.environ.get('COLLAGE_BASE_DIR', '/home/student1/ftzina_thesis')
 
 # Ο φάκελος 'data' περιέχει τα κατεβασμένα ZIP (π.χ. batch_4.zip ή batch_1.zip)
 # Αλλάξτε το 'batch_4.zip' ανάλογα με το ποιο ZIP περιέχει το αρχείο δοκιμής σας
-ZIP_NAME = 'batch_2.zip' 
+ZIP_NAME = 'batch_1.zip' 
 ZIP_PATH = os.path.join(BASE_DIR, 'data', ZIP_NAME)
 
 DATA_ROOT = os.path.join(BASE_DIR, 'panorama_cases')
 os.makedirs(DATA_ROOT, exist_ok=True)
 
 # ── 2. Στοχευμένη Αποσυμπίεση ΜΟΝΟ του Αρχείου Δοκιμής ────────────────────────
-TARGET_FILE = "100576_00001_0000.nii.gz"
+TARGET_FILE = "100029_00001_0000.nii.gz"
 extracted_file_path = os.path.join(DATA_ROOT, TARGET_FILE)
 
 if os.path.exists(extracted_file_path):
