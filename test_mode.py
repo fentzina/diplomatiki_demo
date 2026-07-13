@@ -28,7 +28,7 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 # ── Local filesystem layout (replaces Colab's google.colab.drive mount) ─────
 # Everything lives under BASE_DIR now. Point it at wherever you want your
 # data + outputs to live on this machine (a mounted data disk, NFS share, etc).
-BASE_DIR = os.environ.get('COLLAGE_BASE_DIR', '/home/student1/ftzina_thesis')
+BASE_DIR = os.environ.get('COLLAGE_BASE_DIR', '/data/collage_pdac')
 
 output_drive_dir = os.path.join(BASE_DIR, 'outputs')
 plots_dir        = os.path.join(output_drive_dir, 'plots')
@@ -55,7 +55,7 @@ BASE_DIR = os.environ.get('COLLAGE_BASE_DIR', '/home/student1/ftzina_thesis')
 # Ο φάκελος 'data' περιέχει τα κατεβασμένα ZIP (π.χ. batch_4.zip ή batch_1.zip)
 # Αλλάξτε το 'batch_4.zip' ανάλογα με το ποιο ZIP περιέχει το αρχείο δοκιμής σας
 ZIP_NAME = 'batch_1.zip' 
-ZIP_PATH = os.path.join(BASE_DIR, '/home/student1/ftzina_thesis/data', ZIP_NAME)
+ZIP_PATH = os.path.join(BASE_DIR, 'data', ZIP_NAME)
 
 DATA_ROOT = os.path.join(BASE_DIR, 'panorama_cases')
 os.makedirs(DATA_ROOT, exist_ok=True)
@@ -193,10 +193,7 @@ def process_one_case(nifti_file_path, selected_case_number):
 
     """# 6.  PREPROCESSING FUNCTION  (orient LPS + resample to 1×1×1mm)
     All geometry operations happen at the SimpleITK level BEFORE any numpy conversion.  Labels use NearestNeighbor interpolation.
-
-
     """
-
     # @title
     def preprocess_to_isotropic_lps(sitk_image, is_mask=False,
                                      new_spacing=(1.0, 1.0, 1.0)):
@@ -1355,13 +1352,18 @@ def process_one_case(nifti_file_path, selected_case_number):
     assert loaded.shape == (128, 128, 128, 28), f"Bad save: {output_file_path}"
     print(f"Verified: {output_file_path}")
 
+    # ── ΣΩΣΤΗ ΑΠΟΘΗΚΕΥΣΗ ΕΙΚΟΝΑΣ (CT Image)
     output_path_local = os.path.join(BASE_DIR, 'ALL_METRICS', 'ALL_IMAGES', f"{selected_case_number}_image.npy")
-    np.save(output_path_local, _3d_mask_for_collage_yxz)
-    print(f"Saved tensor to local path: {output_path_local}")
+    # Χρησιμοποιούμε το _3d_cropped_ct_zyx που περιέχει τις τιμές Hounsfield (HU)
+    np.save(output_path_local, _3d_cropped_ct_zyx.astype(np.float32))
+    print(f"Saved TRUE CT image tensor to local path: {output_path_local}")
 
+    # ── ΣΩΣΤΗ ΑΠΟΘΗΚΕΥΣΗ ΜΑΣΚΑΣ (Mask / Label)
     output_path_local = os.path.join(BASE_DIR, 'ALL_METRICS', 'ALL_MASKS', f"{selected_case_number}_mask.npy")
-    np.save(output_path_local, _3d_mask_for_collage_yxz.astype(np.uint8))
-    print(f"Saved tensor to local path: {output_path_local}")
+    # Μετατροπή σε float32 για να ταιριάζει απόλυτα με το Colab σας
+    np.save(output_path_local, _3d_cropped_mask_zyx.astype(np.float32))
+    print(f"Saved TRUE mask tensor to local path: {output_path_local}")
+
 
     # Final shape: (128, 128, 128, 28)
     # Channels 0     : clipped CT (normalised)
