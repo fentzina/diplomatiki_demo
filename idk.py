@@ -377,27 +377,70 @@ def process_case(ct_path, label_path, output_dir):
     _3d_cropped_ct_zyx = clipped_ct_numpy[z_start:z_end, y_start:y_end, x_start:x_end]
     _3d_cropped_mask_zyx = guide_mask[z_start:z_end, y_start:y_end, x_start:x_end]
 
-    # Reshape for CoLIAGe inputs: ZYX -> YXZ
-    _3d_image_for_collage_yxz = np.transpose(_3d_cropped_ct_zyx, (1, 2, 0))
-    _3d_mask_for_collage_yxz = np.transpose(_3d_cropped_mask_zyx, (1, 2, 0))
 
-    # Pad inputs for Boundary Safety
+    logger.info("Executing 3D CoLIAGe calculations...")
+    # 1. Use the exact cropped spatial input matrix for CoLIAGe sizing
+    # CoLIAGe expects (Height, Width, Depth) = (Y, X, Z)
+    _3d_image_for_collage_yxz = np.transpose(_3d_cropped_ct_zyx, (1, 2, 0))
+    _3d_mask_for_collage_yxz  = np.transpose(_3d_cropped_mask_zyx, (1, 2, 0))
+
+    # 2. Add padding explicitly for SVD boundary protection
     SVD_RADIUS = 3
-    PAD_Z = 1
+    PAD_Z      = 1
+    
     ct_padded = np.pad(_3d_image_for_collage_yxz,
                        ((PAD_Z, PAD_Z), (SVD_RADIUS, SVD_RADIUS), (SVD_RADIUS, SVD_RADIUS)),
                        mode='reflect')
+    
     mask_padded = np.pad(_3d_mask_for_collage_yxz.astype(np.uint8),
                          ((PAD_Z, PAD_Z), (SVD_RADIUS, SVD_RADIUS), (SVD_RADIUS, SVD_RADIUS)),
                          mode='constant', constant_values=0)
 
-    # Execute CoLIAGe
-    collage_3d_instance = Collage(ct_padded, mask_padded, svd_radius=SVD_RADIUS, num_unique_angles=32)
-    collage_3d_instance.execute()
+    # 3. Initialize Collage with the padded volumes
+    collage_3d_instance = Collage(
+        ct_padded,
+        mask_padded,
+        svd_radius=SVD_RADIUS,
+        num_unique_angles=32
+    )
 
-    # Trim padding out
-    raw = collage_3d_instance.collage_output
-    raw_trimmed = raw[PAD_Z:-PAD_Z, SVD_RADIUS:-SVD_RADIUS, SVD_RADIUS:-SVD_RADIUS, :, :]
+
+
+    # 4. CRITICAL FIX: Bypass the faulty collage_output variable internal mapping 
+    # Instead of running instance.execute() which hits the broadcast error, 
+    # we call the internal texture feature pipeline directly to protect the matrix shapes!
+    
+    # Force normalization range conversion
+    if ct_padded.max() > 1:
+        ct_padded_norm = ct_padded / ct_padded.max()
+    else:
+        ct_padded_norm = ct_padded
+
+    # Re-calculate gradients directly
+    dx = np.gradient(ct_padded_norm, axis=1)
+    dy = np.gradient(ct_padded_norm, axis=0)
+    dz = np.gradient(ct_padded_norm, axis=2)
+
+    # Extract dominant angles array matching padded dimension space
+    dominant_angles = _svd_dominant_angles(dx, dy, dz, SVD_RADIUS)
+    angles_shape = dominant_angles.shape
+
+    # Calculate Haralick features directly to array
+    haralick_features = np.empty(angles_shape[0:3] + (13, 2))
+    for angle_index in range(angles_shape[3]):
+        haralick_features[:, :, :, :, angle_index] = collage_3d_instance._calculate_haralick_textures(
+            dominant_angles[:, :, :, angle_index]
+        )
+
+    # 5. Trim the safety padding out to yield the true target shapes (128, 128, 128, 13, 2)
+    raw_trimmed = haralick_features[
+        PAD_Z:-PAD_Z, 
+        SVD_RADIUS:-SVD_RADIUS, 
+        SVD_RADIUS:-SVD_RADIUS, 
+        :, :
+    ]
+    
+    logger.info(f"CoLIAGe processing successful. Trimmed output array shape: {raw_trimmed.shape}")
 
     # Transpose trimmed back to ZYX & flatten dimensions (Z, Y, X, 26)
     _3d_haralick_volume_zyx = np.transpose(raw_trimmed, (2, 0, 1, 3, 4))
