@@ -410,6 +410,9 @@ def process_case(ct_path, label_path, output_dir):
     # Instead of running instance.execute() which hits the broadcast error, 
     # we call the internal texture feature pipeline directly to protect the matrix shapes!
     
+    # 4. FIXED: Bypass the faulty collage_output variable internal mapping 
+    # and feed the correct padded mask shape into the texture generator loop.
+    
     # Force normalization range conversion
     if ct_padded.max() > 1:
         ct_padded_norm = ct_padded / ct_padded.max()
@@ -424,6 +427,10 @@ def process_case(ct_path, label_path, output_dir):
     # Extract dominant angles array matching padded dimension space
     dominant_angles = _svd_dominant_angles(dx, dy, dz, SVD_RADIUS)
     angles_shape = dominant_angles.shape
+
+    # Temporary override of the internal mask array to match the padded volume shape
+    # This prevents the index out of bounds error when evaluating self._mask_array[y,x,z]
+    collage_3d_instance._mask_array = mask_padded.astype(bool)
 
     # Calculate Haralick features directly to array
     haralick_features = np.empty(angles_shape[0:3] + (13, 2))
