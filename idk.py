@@ -23,6 +23,67 @@ from scipy import linalg
 from skimage.feature import graycomatrix
 from skimage.util.shape import view_as_windows
 
+import os
+import glob
+import zipfile
+
+# ── 1. Ρύθμιση Μονοπατιών για τον Server ──────────────────────────────────────
+BASE_DIR = os.environ.get('COLLAGE_BASE_DIR', '/home/student1/ftzina_thesis')
+
+# Ο φάκελος 'data' περιέχει τα κατεβασμένα ZIP (π.χ. batch_4.zip ή batch_1.zip)
+# Αλλάξτε το 'batch_4.zip' ανάλογα με το ποιο ZIP περιέχει το αρχείο δοκιμής σας
+ZIP_NAME = 'batch_1.zip' 
+ZIP_PATH = os.path.join(BASE_DIR, 'data', ZIP_NAME)
+
+DATA_ROOT = os.path.join(BASE_DIR, 'panorama_cases')
+os.makedirs(DATA_ROOT, exist_ok=True)
+
+# ── 2. Στοχευμένη Αποσυμπίεση ΜΟΝΟ του Αρχείου Δοκιμής ────────────────────────
+TARGET_FILE = "100029_00001_0000.nii.gz"
+extracted_file_path = os.path.join(DATA_ROOT, TARGET_FILE)
+
+if os.path.exists(extracted_file_path):
+    print(f"[TEST] Το αρχείο δοκιμής {TARGET_FILE} υπάρχει ήδη στο {DATA_ROOT} — skipping extraction.")
+else:
+    if not os.path.isfile(ZIP_PATH):
+        raise FileNotFoundError(f"Το ZIP αρχείο δεν βρέθηκε στη διαδρομή: '{ZIP_PATH}'")
+    
+    print(f"[TEST] Αναζήτηση και εξαγωγή του {TARGET_FILE} από το {ZIP_NAME}...")
+    
+    with zipfile.ZipFile(ZIP_PATH, 'r') as zf:
+        # Ψάχνουμε το αρχείο μέσα στο ZIP (μπορεί να είναι μέσα σε υποφάκελο)
+        target_internal_path = None
+        for member in zf.namelist():
+            if member.endswith(TARGET_FILE):
+                target_internal_path = member
+                break
+        
+        if target_internal_path is None:
+            raise FileNotFoundError(f"Το αρχείο {TARGET_FILE} δεν βρέθηκε μέσα στο {ZIP_NAME}!")
+        
+        # Εξαγωγή μόνο αυτού του αρχείου
+        zf.extract(target_internal_path, DATA_ROOT)
+        
+        # Αν το zipfile το έβγαλε μέσα σε υποφάκελο, το μεταφέρουμε χύμα στο DATA_ROOT
+        actual_extracted_path = os.path.join(DATA_ROOT, target_internal_path)
+        if actual_extracted_path != extracted_file_path:
+            shutil.move(actual_extracted_path, extracted_file_path)
+            
+    print(f"[TEST] Το αρχείο {TARGET_FILE} είναι έτοιμο στη διαδρομή: {extracted_file_path}")
+
+# ── 3. Δημιουργία Λίστας Αρχείων ΑΠΟΚΛΕΙΣΤΙΚΑ για τη Δοκιμή ──────────────────
+# Αντί για glob σε όλο τον φάκελο, βάζουμε καρφωτά μόνο το αρχείο δοκιμής
+all_ct_files = [extracted_file_path]
+print(f"\n[TEST MODE] Έτοιμο για δοκιμή με {len(all_ct_files)} αρχείο CT.")
+
+
+# ---- 2. Build the full, sorted list of CT case files across all 4 batches --
+all_ct_files = sorted(
+    glob.glob(os.path.join(DATA_ROOT, '**', '*.nii.gz'), recursive=True)
+)
+print(f"\nFound {len(all_ct_files)} total CT case files across all batches.")
+assert len(all_ct_files) > 0, "No .nii.gz files found — check ZENODO_BATCH_URLS / zip structure."
+
 # Set up logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger('preprocess_pipeline')
