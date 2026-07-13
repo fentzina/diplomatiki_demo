@@ -28,7 +28,7 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 # ── Local filesystem layout (replaces Colab's google.colab.drive mount) ─────
 # Everything lives under BASE_DIR now. Point it at wherever you want your
 # data + outputs to live on this machine (a mounted data disk, NFS share, etc).
-BASE_DIR = os.environ.get('COLLAGE_BASE_DIR', '/data/collage_pdac')
+BASE_DIR = os.environ.get('COLLAGE_BASE_DIR', '/home/student1/ftzina_thesis')
 
 output_drive_dir = os.path.join(BASE_DIR, 'outputs')
 plots_dir        = os.path.join(output_drive_dir, 'plots')
@@ -55,7 +55,7 @@ BASE_DIR = os.environ.get('COLLAGE_BASE_DIR', '/home/student1/ftzina_thesis')
 # Ο φάκελος 'data' περιέχει τα κατεβασμένα ZIP (π.χ. batch_4.zip ή batch_1.zip)
 # Αλλάξτε το 'batch_4.zip' ανάλογα με το ποιο ZIP περιέχει το αρχείο δοκιμής σας
 ZIP_NAME = 'batch_1.zip' 
-ZIP_PATH = os.path.join(BASE_DIR, 'data', ZIP_NAME)
+ZIP_PATH = os.path.join(BASE_DIR, '/home/student1/ftzina_thesis/data', ZIP_NAME)
 
 DATA_ROOT = os.path.join(BASE_DIR, 'panorama_cases')
 os.makedirs(DATA_ROOT, exist_ok=True)
