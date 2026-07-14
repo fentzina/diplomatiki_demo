@@ -30,6 +30,7 @@ import argparse
 import zipfile
 from itertools import product
 from enum import Enum
+from tqdm import tqdm
 
 import numpy as np
 import SimpleITK as sitk
@@ -655,7 +656,7 @@ def main():
         batch_skipped = 0
         batch_failed = 0
 
-        for ct_file in ct_files:
+        for ct_file in tqdm(ct_files, desc=f"Processing {batch_stem}"): #for ct_file in ct_files:
             status = process_one_ct_file(ct_file, label_lookup, args.output_dir)
             if status == "success":
                 batch_success += 1
