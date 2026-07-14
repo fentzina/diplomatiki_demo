@@ -1,3 +1,5 @@
+# EDW EXEI NORMALIZATION - DEN TO THELW!!
+
 #!/usr/bin/env python3
 """
 Automated 3D CT Preprocessing & CoLIAGe Feature Extraction Pipeline -- batch mode.
