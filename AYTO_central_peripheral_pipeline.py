@@ -560,9 +560,9 @@ def process_case(ct_path, label_path, output_dir, case_id):
     )
 
     # Create subdirectories and write out matrix files
-    img_dir  = os.path.join(output_dir, "ALL_METRICS", "ALL_IMAGES")
-    mask_dir = os.path.join(output_dir, "ALL_METRICS", "ALL_MASKS")
-    het_dir  = os.path.join(output_dir, "ALL_METRICS", "HETEROGENEITY")
+    img_dir  = os.path.join(output_dir, "PART2", "ALL_IMAGES")
+    mask_dir = os.path.join(output_dir, "PART2", "ALL_MASKS")
+    het_dir  = os.path.join(output_dir, "PART2", "HETEROGENEITY")
     for d in [img_dir, mask_dir, het_dir]:
         os.makedirs(d, exist_ok=True)
 
@@ -767,7 +767,7 @@ def main():
         files_to_process = []
         for ct_file in ct_files:
             case_stem = os.path.basename(ct_file).replace("_0000.nii.gz", "").replace(".nii.gz", "")
-            out_check = os.path.join(args.output_dir, 'ALL_METRICS', 'HETEROGENEITY', f"{case_stem}_heterogeneity_vector.npy")
+            out_check = os.path.join(args.output_dir, 'PART2', 'HETEROGENEITY', f"{case_stem}_heterogeneity_vector.npy")
             if not os.path.exists(out_check):
                 files_to_process.append(ct_file)
 
