@@ -656,7 +656,30 @@ def main():
         batch_skipped = 0
         batch_failed = 0
 
-        for ct_file in tqdm(ct_files, desc=f"Processing {batch_stem}"): #for ct_file in ct_files:
+        #############################################################
+        #for ct_file in tqdm(ct_files, desc=f"Processing {batch_stem}"): #for ct_file in ct_files:
+        #    status = process_one_ct_file(ct_file, label_lookup, args.output_dir)
+        #    if status == "success":
+        #        batch_success += 1
+        #    elif status == "skipped_no_label":
+        #        batch_skipped += 1
+        #    else:
+        #        batch_failed += 1
+        
+        # 1. Κρατάμε ΜΟΝΟ τα αρχεία που ΔΕΝ έχουν ήδη παραχθεί
+        files_to_process = []
+        for ct_file in ct_files:
+            # Παίρνουμε το καθαρό case_stem (το λυμένο από χθες)
+            case_stem = os.path.basename(ct_file).replace("_0000.nii.gz", "").replace(".nii.gz", "")
+            out_check = os.path.join(args.output_dir, 'ALL_TENSORS', 'npy_files', f"{case_stem}_tensor_128_27ch.npy")
+            
+            if not os.path.exists(out_check):
+                files_to_process.append(ct_file)
+
+        logger.info(f"[Filter] Από τα {len(ct_files)} αρχεία, τα {len(ct_files) - len(files_to_process)} υπάρχουν ήδη. Ξεκινάνε τα {len(files_to_process)} που απομένουν.")
+
+        # 2. Το loop τρέχει ΜΟΝΟ για όσα λείπουν — Η μπάρα δείχνει την ΠΡΑΓΜΑΤΙΚΗ πρόοδο
+        for ct_file in tqdm(files_to_process, desc=f"Processing {batch_stem}"):
             status = process_one_ct_file(ct_file, label_lookup, args.output_dir)
             if status == "success":
                 batch_success += 1
@@ -664,6 +687,7 @@ def main():
                 batch_skipped += 1
             else:
                 batch_failed += 1
+##################################################################################
 
         grand_total += len(ct_files)
         grand_success += batch_success
