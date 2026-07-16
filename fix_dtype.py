@@ -12,7 +12,7 @@ import numpy as np
 from tqdm import tqdm
 
 # This line defines tensor_dir — edit the path here if it ever changes.
-tensor_dir = os.path.expanduser("~/ftzina_thesis/outputs/ALL_TENSORS/npy_files")
+tensor_dir = os.path.expanduser("~/ftzina_thesis/outputs/ALL_TENSORS_1/npy_files")
 
 npy_files = sorted(f for f in os.listdir(tensor_dir) if f.endswith('.npy'))
 
