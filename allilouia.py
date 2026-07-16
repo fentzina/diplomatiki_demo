@@ -486,7 +486,7 @@ def process_case(ct_path, label_path, output_dir, case_id):
 
     clean_case_id = case_id.removesuffix('_0000') if case_id.endswith('_0000') else case_id     #clean_case_id = case_id.replace('_0000', '')
     tensor_out_path = os.path.join(npy_dir, f"{clean_case_id}_tensor_128_27ch.npy")
-    np.save(tensor_out_path, tensor_with_label)
+    np.save(tensor_out_path, tensor_with_label.astype(np.float32))
     logger.info(f"Successfully saved raw (unnormalized) 28-channel tensor -> {tensor_out_path}")
 
     # Save additional diagnostics matching original outputs
