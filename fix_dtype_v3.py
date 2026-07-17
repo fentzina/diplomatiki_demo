@@ -4,7 +4,7 @@ import numpy as np
 from tqdm import tqdm
 
 # ---- EDIT THIS PATH IF NEEDED ----
-tensor_dir = os.path.expanduser("~/ftzina_thesis/outputs/ALL_TENSORS_3/npy_files")
+tensor_dir = os.path.expanduser("~/ftzina_thesis/outputs/ALL_TENSORS_4/npy_files")
 # -----------------------------------
 
 tensor_dir = os.path.abspath(tensor_dir)
