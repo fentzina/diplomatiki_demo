@@ -11,7 +11,7 @@ Original file is located at
 import numpy as np
 import os
 
-OUTPUT_DIR = "/path/to/step1_outputs"
+OUTPUT_DIR  = "/home/student1/ftzina_thesis/outputs/step1_res"
 BATCH_NAMES = ["batch_1", "batch_2", "batch_3", "batch_4"]
 
 X_list   = []
