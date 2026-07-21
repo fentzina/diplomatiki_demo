@@ -856,8 +856,9 @@ def main():
         )
 
         for ct_file in tqdm(files_to_process, desc=f"Processing {batch_stem}"):
-            status = process_one_ct_file(ct_file, label_lookup, args.output_dir,
-                                          internal_fraction=args.internal_fraction)
+            #status = process_one_ct_file(ct_file, label_lookup, args.output_dir,internal_fraction=args.internal_fraction)
+            status = process_one_ct_file(ct_file, label_lookup, args.output_dir)
+
             if status == "success":
                 batch_success += 1
             elif status == "skipped_no_label":
