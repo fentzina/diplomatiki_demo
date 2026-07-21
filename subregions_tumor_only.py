@@ -450,7 +450,8 @@ def compute_central_peripheral_heterogeneity(ct_padded, guide_mask_128_zyx, svd_
     radiomics is the only thing this pipeline produces.
     """
     central_mask, peripheral_mask = split_central_peripheral(
-        guide_mask_128_zyx, voxel_spacing=(1.0, 1.0, 1.0), internal_fraction=INTERNAL_FRACTION
+        #guide_mask_128_zyx, voxel_spacing=(1.0, 1.0, 1.0), internal_fraction=INTERNAL_FRACTION
+        guide_mask_128_zyx, voxel_spacing=(1.0, 1.0, 1.0), internal_fraction=DEFAULT_INTERNAL_FRACTION
     )
 
     for name, m in [('Central', central_mask), ('Peripheral', peripheral_mask)]:
