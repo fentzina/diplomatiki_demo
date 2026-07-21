@@ -83,10 +83,14 @@ TUMOR_LABEL     = 1                # PDAC tumor segmentation label
 PANCREAS_LABEL  = 4                # NOT used in this tumor-only version
 SVD_RADIUS      = 3
 PAD_Z           = 1               # gradient edge margin, Z axis only
+
+######################
 DEFAULT_INTERNAL_FRACTION = 0.5   # overridable via --internal_fraction
+INTERNAL_FRACTION = 0.5
+######################
+
 #MIN_SUBREGION_YX = 7              # min bounding box in Y and X (was 50 in v1)
 #MIN_SUBREGION_Z  = 3              # min bounding box in Z
-
 # --- Ρυθμίσεις ευθυγραμμισμένες με τη βιβλιογραφία μικρών όγκων ≤10mm/≤20mm ---
 MIN_SUBREGION_YX = 10              # 10 voxels = 10mm (το κλινικό όριο early-detection)
 MIN_SUBREGION_Z  = 3               # Κρατήστε το 3, αλλά προσοχή στα gradients
