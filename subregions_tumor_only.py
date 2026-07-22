@@ -85,8 +85,8 @@ SVD_RADIUS      = 3
 PAD_Z           = 1               # gradient edge margin, Z axis only
 
 ######################
-DEFAULT_INTERNAL_FRACTION = 0.4   # overridable via --internal_fraction
-INTERNAL_FRACTION = 0.4
+DEFAULT_INTERNAL_FRACTION = 0.6   # overridable via --internal_fraction
+INTERNAL_FRACTION = 0.6
 ######################
 
 #MIN_SUBREGION_YX = 7              # min bounding box in Y and X (was 50 in v1)
