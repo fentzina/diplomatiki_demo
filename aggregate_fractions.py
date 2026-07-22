@@ -8,10 +8,10 @@ import os
 import numpy as np
 
 # CONFIG — change FRACTION and HETERO_DIR for each run
-FRACTION   = 0.4    # change to 0.4 or 0.6 for the other runs
+FRACTION   = 0.6    # change to 0.4 or 0.6 for the other runs
 
-HETERO_DIR = f"/home/student1/ftzina_thesis/outputs/subregions_tumor_only/ALL_METRICS_0.4/HETEROGENEITY"
-OUTPUT_DIR = f"/home/student1/ftzina_thesis/outputs/subregions_tumor_only/fraction_0.4_aggregated"
+HETERO_DIR = f"/home/student1/ftzina_thesis/outputs/subregions_tumor_only/ALL_METRICS_0.6/HETEROGENEITY"
+OUTPUT_DIR = f"/home/student1/ftzina_thesis/outputs/subregions_tumor_only/fraction_0.6_aggregated"
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 # ─────────────────────────────────────────────────────────────────────────────
