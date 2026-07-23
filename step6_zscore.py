@@ -13,7 +13,7 @@ Input  : {case_id}_image.npy   (128,128,128)  raw CT volumes
          ids_train/val/test.npy, y_train/val/test.npy  (from Step 2)
 Output : best_cnn.pt
          deep_embeddings_train/val/test.npy   → (N, embed_dim)
-         cnn_training_curves_MONAI.png
+         cnn_training_curves.png
          zscore_stats.npz                     → CT_MEAN, CT_STD from training set
 
 Patch strategy:
@@ -500,14 +500,9 @@ scheduler   = torch.optim.lr_scheduler.LinearLR(
     optimizer, start_factor=1.0, end_factor=0.1, total_iters=N_EPOCHS
 )
 
-#n_neg, n_pos  = int((y_train == 0).sum()), int((y_train == 1).sum())
-#pos_weight    = torch.tensor([n_neg / n_pos], dtype=torch.float32).to(device)
-#criterion     = nn.BCEWithLogitsLoss(pos_weight=pos_weight)
-
 n_neg, n_pos = int((y_train == 0).sum()), int((y_train == 1).sum())
 pos_weight = torch.tensor([n_neg / n_pos], dtype=torch.float32).to(device)
-# With your numbers: 1092 / 473 ≈ 2.31
-criterion = nn.BCEWithLogitsLoss(pos_weight=pos_weight)
+criterion = nn.BCEWithLogitsLoss(pos_weight=pos_weight) # With your numbers: 1092 / 473 ≈ 2.31
 
 total_params  = sum(p.numel() for p in model.parameters() if p.requires_grad)
 print(f"\nModel parameters: {total_params:,}")
@@ -584,11 +579,8 @@ axes[1].set_xlabel("Epoch"); axes[1].set_ylabel("ROC-AUC")
 axes[1].set_title("Validation AUC")
 
 plt.tight_layout()
-plt.show()
-
-plt.savefig(os.path.join(OUTPUT_DIR, "cnn_training_curves_MONAI.png"), dpi=150)
+plt.savefig(os.path.join(OUTPUT_DIR, "cnn_training_curves.png"), dpi=150)
 plt.close()
-print(f"Training curves saved.")
 
 """# Extract embeddings for all splits (one centroid patch per case)"""
 
