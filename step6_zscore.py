@@ -67,7 +67,7 @@ LR               = 1e-4
 WEIGHT_DECAY     = 1e-4
 PATIENCE         = 10       # early stopping on val AUC
 RANDOM_STATE     = 42
-NUM_WORKERS      = 2        # set 0 on Windows
+NUM_WORKERS      = 4        # set 0 on Windows
 
 # ── Z-score normalization ─────────────────────────────────────────────────────
 # Z-score statistics (mean, std) are computed from TRAINING images ONLY,
