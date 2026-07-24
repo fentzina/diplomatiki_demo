@@ -42,6 +42,8 @@ architecture by dropping it into the same forward() signature.
 import os
 import numpy as np
 import torch
+torch.backends.cudnn.enabled = False
+
 import torch.nn as nn
 from torch.utils.data   import Dataset, DataLoader
 from sklearn.metrics    import roc_auc_score
