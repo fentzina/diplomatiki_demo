@@ -61,7 +61,7 @@ IMAGE_DIR        = "/home/student1/ftzina_thesis/step6/ALL_METRICS_FULL/ALL_IMAG
 MASK_DIR         = "/home/student1/ftzina_thesis/step6/ALL_METRICS_FULL/ALL_MASKS_FULL"         # {case_id}_mask.npy    (128,128,128)
 # COLIAGE_DIR      = "/content/drive/MyDrive/metrics_batch1/ALL_TENSORS/npy files"       # {case_id}_coliage.npy (128,128,128,28)
 SPLIT_DIR        = "/home/student1/ftzina_thesis/step6/step2_outputs"            # ids_*.npy, y_*.npy from Step 2
-OUTPUT_DIR       = "/home/student1/ftzina_thesis/step6/step6_outputs"
+OUTPUT_DIR       = "/home/student1/ftzina_thesis/step6/step6_outputs2"
 
 USE_COLIAGE      = False    # True → 28-channel CoLIAGe input; False → 1-ch raw CT
 COLIAGE_DIR      = None     # set path if USE_COLIAGE=True
