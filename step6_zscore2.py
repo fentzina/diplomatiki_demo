@@ -61,11 +61,11 @@ OUTPUT_DIR       = "/home/student1/ftzina_thesis/step6/step6_outputs"
 USE_COLIAGE      = False    # True → 28-channel CoLIAGe input; False → 1-ch raw CT
 COLIAGE_DIR      = None     # set path if USE_COLIAGE=True
 PATCH_SIZE       = 64       # cubic patch side length in voxels
-PATCHES_PER_CASE = 8 #4        # patches sampled per case per epoch (train only)
+PATCHES_PER_CASE = 4        # patches sampled per case per epoch (train only)
 EMBED_DIM        = 128      # CNN output embedding dimension
 BATCH_SIZE       = 4        # keep small for 3D patches (memory)
 N_EPOCHS         = 50
-LR               = 2e-4 #1e-4
+LR               = 1e-4
 WEIGHT_DECAY     = 1e-4
 PATIENCE         = 10       # early stopping on val AUC
 RANDOM_STATE     = 42
@@ -624,25 +624,34 @@ def extract_train_embeddings(case_ids_ordered: np.ndarray) -> np.ndarray:
     )
 
     # Collect embeddings per case_id
-    emb_accumulator = {}   # case_id → list of embedding arrays
+    prob_accumulator #emb_accumulator = {}   # case_id → list of embedding arrays
 
     with torch.no_grad():
         for X_batch, _, case_ids_batch in train_emb_loader:
-            embs = model(X_batch.to(device), return_embedding=True)
-            embs = embs.cpu().numpy()
-            for cid, emb in zip(case_ids_batch, embs):
+            logits = model(X_batch.to(device), return_embedding=False) #embs = model(X_batch.to(device), return_embedding=True)
+            probs  = torch.sigmoid(logits).cpu().numpy() #embs = embs.cpu().numpy()
+            for cid, prob in zip(case_ids_batch, probs): #for cid, emb in zip(case_ids_batch, embs):
                 cid = str(cid)
-                if cid not in emb_accumulator:
-                    emb_accumulator[cid] = []
-                emb_accumulator[cid].append(emb)
+                if cid not in prob_accumulator: #if cid not in emb_accumulator:
+                    prob_accumulator[cid] = [] #emb_accumulator[cid] = []
+                prob_accumulator[cid].append(prob) #emb_accumulator[cid].append(emb)
 
     # Average patch embeddings → one vector per case
+    #emb_matrix = np.stack([
+    #    np.mean(emb_accumulator[str(cid)], axis=0)
+    #    for cid in case_ids_ordered
+    #])
+    #print(f"  train: {emb_matrix.shape}  "
+    #      f"(averaged {PATCHES_PER_CASE} patches × {len(case_ids_ordered)} cases)")
+    #########################################
+         # NEW ####
     emb_matrix = np.stack([
-        np.mean(emb_accumulator[str(cid)], axis=0)
-        for cid in case_ids_ordered
+         np.mean(prob_accumulator[str(cid)], axis=0)
+         for cid in case_ids_ordered
     ])
     print(f"  train: {emb_matrix.shape}  "
           f"(averaged {PATCHES_PER_CASE} patches × {len(case_ids_ordered)} cases)")
+         
     return emb_matrix.astype(np.float32)
 
 # @title
