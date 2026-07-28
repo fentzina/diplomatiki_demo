@@ -2,6 +2,12 @@
 """
 # STEP 6 — Patch-Based CNN Training (with Z-score normalization)
 
+Ένας συνδυασμός δύο αλλαγών:
+α. Aντί να υπολογίζω τον μέσο όρο των embeddings, κάθε patch θα τροφοδοτείται πλήρως μέσω του classifier head 
+παράγοντας 1 ανεξάρτητη πιθανότητα PDAC, και ο μέσος όρος αυτών των πιθανοτήτων αποτελεί την τελική πρόβλεψη ανά ασθενή, 
+και β. ταυτόχρονα, να χρησιμοποιησω 4 patches και στο validation/test, 
+αντί για ένα μόνο centroid patch (έτσι ωστε η διαδικασία είναι πανομοιότυπη και στα τρία subsets).
+
 Input  : {case_id}_image.npy   (128,128,128)  raw CT volumes
          {case_id}_mask.npy    (128,128,128)  binary ROI masks  uint8
          ids_train/val/test.npy, y_train/val/test.npy  (from Step 2)
