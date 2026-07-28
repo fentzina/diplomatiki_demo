@@ -1,20 +1,25 @@
 # -*- coding: utf-8 -*-
 """
-# STEP 6 — Patch-Based CNN Training (with Z-score normalization) - TRY 2: batch_size=8, LR=2e-4
+# STEP 6 — Patch-Based CNN Training (with Z-score normalization)
 
 Input  : {case_id}_image.npy   (128,128,128)  raw CT volumes
          {case_id}_mask.npy    (128,128,128)  binary ROI masks  uint8
          ids_train/val/test.npy, y_train/val/test.npy  (from Step 2)
 Output : best_cnn.pt
-         deep_embeddings_train/val/test.npy   → (N, embed_dim)
+         deep_embeddings_train/val/test.npy   → (N, 1) patient-level PDAC probabilities
+                                                 CHANGED from (N, embed_dim) embeddings
          cnn_training_curves.png
          zscore_stats.npz                     → CT_MEAN, CT_STD from training set
 
-Patch strategy:
-  - Training : 4 random patches per case sampled from within ROI voxels
-  - Val/Test : 1 patch centered on ROI centroid (deterministic)
+Patch strategy (CHANGED from original):
+  - Training : 4 random patches per case → 4 probabilities → mean → (N,1)
+  - Val/Test : 4 seeded-random patches per case (deterministic, per-case seed)
+               → 4 probabilities → mean → (N,1)
+               CHANGED from: 1 centroid patch → 1 embedding
   - Patch size: 64³ voxels
-  - Augmentation: random axis flips (train only)
+  - Augmentation: random axis flips (train only, during training loop)
+  - Aggregation: decision-level mean of patch probabilities (not embedding mean)
+  - Symmetry: train/val/test all use the same 4-patch aggregation procedure
 
 Z-score normalization:
   - CT_MEAN and CT_STD are computed from ALL training-set image.npy files
@@ -56,7 +61,7 @@ IMAGE_DIR        = "/home/student1/ftzina_thesis/step6/ALL_METRICS_FULL/ALL_IMAG
 MASK_DIR         = "/home/student1/ftzina_thesis/step6/ALL_METRICS_FULL/ALL_MASKS_FULL"         # {case_id}_mask.npy    (128,128,128)
 # COLIAGE_DIR      = "/content/drive/MyDrive/metrics_batch1/ALL_TENSORS/npy files"       # {case_id}_coliage.npy (128,128,128,28)
 SPLIT_DIR        = "/home/student1/ftzina_thesis/step6/step2_outputs"            # ids_*.npy, y_*.npy from Step 2
-OUTPUT_DIR       = "/home/student1/ftzina_thesis/step6/step6_outputs"
+OUTPUT_DIR       = "/home/student1/ftzina_thesis/step6/step6_outputs2"
 
 USE_COLIAGE      = False    # True → 28-channel CoLIAGe input; False → 1-ch raw CT
 COLIAGE_DIR      = None     # set path if USE_COLIAGE=True
@@ -580,10 +585,13 @@ plt.close()
 
 """# Extract embeddings for all splits (one centroid patch per case)"""
 
-print("── Extracting patient-level embeddings ──")
-print("   Train : average of all patch embeddings per case")
-print("   Val   : single centroid patch embedding per case")
-print("   Test  : single centroid patch embedding per case\n")
+# CHANGED: now extracting patient-level PDAC probabilities (not embeddings)
+# Train: mean of 4 patch-level probabilities per case (decision-level aggregation)
+# Val/Test: mean of 4 seeded-random-patch probabilities per case (symmetric with train)
+print("── Extracting patient-level probabilities ──")
+print("   Train : mean of 4 patch PDAC probabilities per case")
+print("   Val   : mean of 4 seeded-patch PDAC probabilities per case")
+print("   Test  : mean of 4 seeded-patch PDAC probabilities per case\n")
 
 model.load_state_dict(torch.load(os.path.join(OUTPUT_DIR, "best_cnn.pt"), map_location=device))
 model.eval()
@@ -591,16 +599,21 @@ model.eval()
 # @title
 def extract_train_embeddings(case_ids_ordered: np.ndarray) -> np.ndarray:
     """
-    Training split: extract embeddings from ALL patches per case,
-    then average them into one patient-level vector.
+    CHANGED: Decision-level probability averaging instead of embedding averaging.
 
-    During training, PATCHES_PER_CASE=4 random patches were sampled
-    per case per epoch. Here we re-sample all 4 patches deterministically
-    (same seed per case) and average their embeddings, giving a richer
-    patient-level representation than a single centroid patch.
+    Training split: each of the PATCHES_PER_CASE patches per case is passed
+    through the full CNN including the classifier head (return_embedding=False),
+    producing one PDAC probability per patch. These probabilities are then
+    averaged into a single scalar patient-level prediction.
+
+    This is a decision-level aggregation: each patch acts as an independent
+    spatial view of the tumor, producing its own PDAC probability, and the
+    patient-level prediction is the mean of those probabilities.
+
+    Output shape: (N, 1) — one probability per patient (not (N, 128) embeddings).
     """
     # Build a dedicated loader: patches_per_case=PATCHES_PER_CASE,
-    # augment=False (no flips during embedding extraction),
+    # augment=False (no flips during extraction),
     # shuffle=False (preserve case grouping for averaging)
     train_emb_dataset = PatchDataset(
         case_ids         = list(case_ids_ordered),
@@ -608,11 +621,11 @@ def extract_train_embeddings(case_ids_ordered: np.ndarray) -> np.ndarray:
         image_dir        = IMAGE_DIR,
         mask_dir         = MASK_DIR,
         patch_size       = PATCH_SIZE,
-        patches_per_case = PATCHES_PER_CASE,   # all patches, not just centroid
+        patches_per_case = PATCHES_PER_CASE,
         use_coliage      = USE_COLIAGE,
         coliage_dir      = COLIAGE_DIR,
         augment          = False,               # no augmentation during extraction
-        ct_mean          = CT_MEAN,            # same stats used during training
+        ct_mean          = CT_MEAN,
         ct_std           = CT_STD,
     )
     train_emb_loader = DataLoader(
@@ -623,71 +636,127 @@ def extract_train_embeddings(case_ids_ordered: np.ndarray) -> np.ndarray:
         collate_fn  = collate_fn,
     )
 
-    # Collect embeddings per case_id
-    prob_accumulator #emb_accumulator = {}   # case_id → list of embedding arrays
+    # CHANGED: collect per-patch PDAC probabilities (not embeddings) per case_id
+    prob_accumulator = {}   # case_id → list of scalar probabilities
 
     with torch.no_grad():
         for X_batch, _, case_ids_batch in train_emb_loader:
-            logits = model(X_batch.to(device), return_embedding=False) #embs = model(X_batch.to(device), return_embedding=True)
-            probs  = torch.sigmoid(logits).cpu().numpy() #embs = embs.cpu().numpy()
-            for cid, prob in zip(case_ids_batch, probs): #for cid, emb in zip(case_ids_batch, embs):
+            # CHANGED: return_embedding=False → full forward pass through classifier head
+            logits = model(X_batch.to(device), return_embedding=False)
+            probs  = torch.sigmoid(logits).cpu().numpy()   # (batch,) scalar probabilities
+            for cid, prob in zip(case_ids_batch, probs):
                 cid = str(cid)
-                if cid not in prob_accumulator: #if cid not in emb_accumulator:
-                    prob_accumulator[cid] = [] #emb_accumulator[cid] = []
-                prob_accumulator[cid].append(prob) #emb_accumulator[cid].append(emb)
+                if cid not in prob_accumulator:
+                    prob_accumulator[cid] = []
+                prob_accumulator[cid].append(float(prob))
 
-    # Average patch embeddings → one vector per case
-    #emb_matrix = np.stack([
-    #    np.mean(emb_accumulator[str(cid)], axis=0)
-    #    for cid in case_ids_ordered
-    #])
-    #print(f"  train: {emb_matrix.shape}  "
-    #      f"(averaged {PATCHES_PER_CASE} patches × {len(case_ids_ordered)} cases)")
-    #########################################
-         # NEW ####
-    emb_matrix = np.stack([
-         np.mean(prob_accumulator[str(cid)], axis=0)
-         for cid in case_ids_ordered
+    # CHANGED: average patch-level probabilities → one scalar per patient
+    # Output is (N, 1) to maintain consistent array shape for downstream use
+    prob_matrix = np.array([
+        [np.mean(prob_accumulator[str(cid)])]
+        for cid in case_ids_ordered
     ])
-    print(f"  train: {emb_matrix.shape}  "
-          f"(averaged {PATCHES_PER_CASE} patches × {len(case_ids_ordered)} cases)")
-         
-    return emb_matrix.astype(np.float32)
+    print(f"  train: {prob_matrix.shape}  "
+          f"(averaged {PATCHES_PER_CASE} patch probabilities × {len(case_ids_ordered)} cases)")
+    return prob_matrix.astype(np.float32)
 
 # @title
 def extract_centroid_embeddings(loader,
                                  case_ids_ordered: np.ndarray,
                                  split_name: str) -> np.ndarray:
     """
-    Val / test splits: extract ONE centroid patch embedding per case.
-    The centroid patch is deterministic (same center every time),
-    so this gives a stable, reproducible patient-level representation.
+    CHANGED: Val / test splits now use 4 seeded random patches per case
+    instead of 1 centroid patch, matching the training procedure.
+
+    Previously: 1 centroid patch → 1 embedding (asymmetric with training).
+    Now: PATCHES_PER_CASE patches per case, sampled with a per-case fixed
+    random seed (deterministic and reproducible), each passing through the
+    full classifier head to produce a PDAC probability. The mean of those
+    probabilities is the patient-level prediction.
+
+    Output shape: (N, 1) — one probability per patient, consistent with
+    extract_train_embeddings output shape.
     """
-    emb_dict = {}
+    prob_dict = {}
 
     with torch.no_grad():
-        for X_batch, _, case_ids_batch in loader:
-            embs = model(X_batch.to(device), return_embedding=True)
-            embs = embs.cpu().numpy()
-            for cid, emb in zip(case_ids_batch, embs):
-                emb_dict[str(cid)] = emb
+        for case_id in case_ids_ordered:
+            case_id_str = str(case_id)
 
-    emb_matrix = np.stack([emb_dict[str(cid)] for cid in case_ids_ordered])
-    print(f"  {split_name}: {emb_matrix.shape}  (1 centroid patch per case)")
-    return emb_matrix.astype(np.float32)
+            # Load mask and image for this case
+            mask_path = os.path.join(MASK_DIR, f"{case_id_str}_mask.npy")
+            img_path  = os.path.join(IMAGE_DIR, f"{case_id_str}_image.npy")
+            mask   = np.load(mask_path)
+            volume = np.load(img_path).astype(np.float32)
 
-# ── Extract patient-level embeddings for all three splits ─────────────────────
+            # CHANGED: sample PATCHES_PER_CASE patches with a fixed per-case seed
+            # This is deterministic and reproducible across runs, replacing the
+            # single centroid patch that was used previously.
+            rng = np.random.default_rng(
+                seed=abs(hash(case_id_str)) % (2 ** 32)
+            )
+            centers = sample_random_roi_centers(
+                mask, n_samples=PATCHES_PER_CASE, patch_size=PATCH_SIZE
+            )
+            # Override the global random state with the seeded one for this case
+            replace = len(np.argwhere(mask.astype(bool))) < PATCHES_PER_CASE
+            roi_coords = np.argwhere(mask.astype(bool))
+            p = PATCH_SIZE // 2
+            H, W, D = mask.shape
+            valid = roi_coords[
+                (roi_coords[:, 0] >= p) & (roi_coords[:, 0] < H - p) &
+                (roi_coords[:, 1] >= p) & (roi_coords[:, 1] < W - p) &
+                (roi_coords[:, 2] >= p) & (roi_coords[:, 2] < D - p)
+            ]
+            if len(valid) == 0:
+                centers = [get_roi_centroid(mask)] * PATCHES_PER_CASE
+            else:
+                idx     = rng.choice(len(valid), size=PATCHES_PER_CASE,
+                                     replace=len(valid) < PATCHES_PER_CASE)
+                centers = [valid[i] for i in idx]
+
+            patch_probs = []
+            for center in centers:
+                patch = extract_patch(volume, center, PATCH_SIZE)
+                # Apply same z-score normalization used during training
+                patch = (patch - CT_MEAN) / max(CT_STD, 1e-8)
+                patch = patch[np.newaxis, np.newaxis, ...]    # (1, 1, P, P, P)
+                x     = torch.tensor(patch, dtype=torch.float32).to(device)
+
+                # CHANGED: return_embedding=False → full pass through classifier head
+                logit = model(x, return_embedding=False)
+                prob  = torch.sigmoid(logit).item()
+                patch_probs.append(prob)
+
+            # Mean of patch-level probabilities = patient-level prediction
+            prob_dict[case_id_str] = np.mean(patch_probs)
+
+    # Stack into (N, 1) array — consistent shape with extract_train_embeddings
+    prob_matrix = np.array([[prob_dict[str(cid)]] for cid in case_ids_ordered])
+    print(f"  {split_name}: {prob_matrix.shape}  "
+          f"({PATCHES_PER_CASE} seeded patches per case, probabilities averaged)")
+    return prob_matrix.astype(np.float32)
+
+# CHANGED: extract patient-level probabilities (not embeddings) for all three splits.
+# extract_centroid_embeddings no longer uses the DataLoader — it iterates case_ids
+# directly and loads images/masks per case to apply seeded random patch sampling.
+# The loader arguments are removed; only case_ids_ordered and split_name are needed.
 deep_train = extract_train_embeddings(id_train)
-deep_val   = extract_centroid_embeddings(val_loader,  id_val,  "val")
-deep_test  = extract_centroid_embeddings(test_loader, id_test, "test")
+deep_val   = extract_centroid_embeddings(None, id_val,  "val")   # loader arg unused
+deep_test  = extract_centroid_embeddings(None, id_test, "test")  # loader arg unused
 
+# CHANGED: output arrays are (N, 1) patient-level probabilities, not (N, 128) embeddings.
+# Saved with the same filenames so step7_fusion.py can load them unchanged.
+# NOTE: step7_fusion.py must be updated to expect (N,1) probabilities instead of
+# (N, 128) embeddings — the fusion strategy changes from embedding concatenation
+# to decision-level meta-learning on two scalar probabilities (CNN + radiomic).
 np.save(os.path.join(OUTPUT_DIR, "deep_embeddings_train.npy"), deep_train)
 np.save(os.path.join(OUTPUT_DIR, "deep_embeddings_val.npy"),   deep_val)
 np.save(os.path.join(OUTPUT_DIR, "deep_embeddings_test.npy"),  deep_test)
 
-print(f"\nSaved deep embeddings:")
-print(f"  deep_embeddings_train.npy → {deep_train.shape}")
-print(f"  deep_embeddings_val.npy   → {deep_val.shape}")
-print(f"  deep_embeddings_test.npy  → {deep_test.shape}")
+print(f"\nSaved patient-level probabilities:")
+print(f"  deep_embeddings_train.npy → {deep_train.shape}  (N, 1) CNN probabilities")
+print(f"  deep_embeddings_val.npy   → {deep_val.shape}  (N, 1) CNN probabilities")
+print(f"  deep_embeddings_test.npy  → {deep_test.shape}  (N, 1) CNN probabilities")
 print(f"  best_cnn.pt")
-print("\nStep 6 complete. Run step7_fusion.py next.")
+print("\nStep 6 complete. Update step7_fusion.py before running next.")
