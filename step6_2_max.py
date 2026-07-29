@@ -614,7 +614,7 @@ def extract_train_embeddings(case_ids_ordered: np.ndarray) -> np.ndarray:
 
     This is a decision-level aggregation: each patch acts as an independent
     spatial view of the tumor, producing its own PDAC probability, and the
-    patient-level prediction is the mean of those probabilities.
+    patient-level prediction is the MAX of those probabilities.
 
     Output shape: (N, 1) — one probability per patient (not (N, 128) embeddings).
     """
@@ -740,7 +740,7 @@ def extract_centroid_embeddings(loader,
     # Stack into (N, 1) array — consistent shape with extract_train_embeddings
     prob_matrix = np.array([[prob_dict[str(cid)]] for cid in case_ids_ordered])
     print(f"  {split_name}: {prob_matrix.shape}  "
-          f"({PATCHES_PER_CASE} seeded patches per case, probabilities averaged)")
+          f"({PATCHES_PER_CASE} seeded patches per case, max probability taken)")
     return prob_matrix.astype(np.float32)
 
 # CHANGED: extract patient-level probabilities (not embeddings) for all three splits.
