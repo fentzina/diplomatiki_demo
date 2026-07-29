@@ -4,7 +4,7 @@
 
 Ένας συνδυασμός δύο αλλαγών:
 α. Aντί να υπολογίζω τον μέσο όρο των embeddings, κάθε patch θα τροφοδοτείται πλήρως μέσω του classifier head 
-παράγοντας 1 ανεξάρτητη πιθανότητα PDAC, και ο μέσος όρος αυτών των πιθανοτήτων αποτελεί την τελική πρόβλεψη ανά ασθενή, 
+παράγοντας 1 ανεξάρτητη πιθανότητα PDAC, και το ΜΑΞΙΜΟΥΜ αυτών των πιθανοτήτων αποτελεί την τελική πρόβλεψη ανά ασθενή, 
 και β. ταυτόχρονα, να χρησιμοποιησω 4 patches και στο validation/test, 
 αντί για ένα μόνο centroid patch (έτσι ωστε η διαδικασία είναι πανομοιότυπη και στα τρία subsets).
 
@@ -656,10 +656,10 @@ def extract_train_embeddings(case_ids_ordered: np.ndarray) -> np.ndarray:
                     prob_accumulator[cid] = []
                 prob_accumulator[cid].append(float(prob))
 
-    # CHANGED: average patch-level probabilities → one scalar per patient
+    # CHANGED: ΜΑΧ patch-level probabilities → one scalar per patient
     # Output is (N, 1) to maintain consistent array shape for downstream use
     prob_matrix = np.array([
-        [np.mean(prob_accumulator[str(cid)])]
+        [np.max(prob_accumulator[str(cid)])] #[np.mean(prob_accumulator[str(cid)])]
         for cid in case_ids_ordered
     ])
     print(f"  train: {prob_matrix.shape}  "
@@ -734,8 +734,8 @@ def extract_centroid_embeddings(loader,
                 prob  = torch.sigmoid(logit).item()
                 patch_probs.append(prob)
 
-            # Mean of patch-level probabilities = patient-level prediction
-            prob_dict[case_id_str] = np.mean(patch_probs)
+            # max of patch-level probabilities = patient-level prediction
+            prob_dict[case_id_str] = np.max(patch_probs) #prob_dict[case_id_str] = np.mean(patch_probs)
 
     # Stack into (N, 1) array — consistent shape with extract_train_embeddings
     prob_matrix = np.array([[prob_dict[str(cid)]] for cid in case_ids_ordered])
