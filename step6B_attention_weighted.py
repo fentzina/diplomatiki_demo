@@ -88,9 +88,9 @@ PALETTE = {
 }
 
 # ── Load embeddings and labels ────────────────────────────────────────────────
-X_train = np.load(os.path.join(STEP6_DIR, "deep_embeddings_train.npy"))
-X_val = np.load(os.path.join(STEP6_DIR, "deep_embeddings_val.npy"))
-X_test = np.load(os.path.join(STEP6_DIR, "deep_embeddings_test.npy"))
+X_train = np.load(os.path.join(STEP6_DIR, "deep_embeddings_train_attention.npy"))
+X_val = np.load(os.path.join(STEP6_DIR, "deep_embeddings_val_attention.npy"))
+X_test = np.load(os.path.join(STEP6_DIR, "deep_embeddings_test_attention.npy"))
 
 y_train = np.load(os.path.join(STEP2_DIR, "y_train.npy"))
 y_val = np.load(os.path.join(STEP2_DIR, "y_val.npy"))
