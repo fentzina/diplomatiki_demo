@@ -1,47 +1,6 @@
-
 """# **6b — CNN Branch Evaluation**"""
 
-# @title
-# -*- coding: utf-8 -*-
 """STEP 6b — CNN Branch Evaluation
-====================================
-Evaluates the quality of the CNN embeddings produced by Step 6
-by training classical classifiers on top of them — exactly mirroring
-Step 5b (radiomic branch evaluation) so results are directly comparable.
-
-Input  : deep_embeddings_train/val/test.npy   (from step6_outputs)
-         y_train/val/test.npy                 (from step2_outputs)
-
-Output (saved to step6b_outputs):
-  results_val.csv / results_test.csv
-  comparison_val.png / comparison_test.png
-  brier_val.png / brier_test.png
-  roc_curves.png
-  pr_curves.png
-  confusion_matrices.png
-  calibration.png
-  best_model.pkl
-  all_models.pkl
-  best_hparams.pkl
-
-Why this step exists
---------------------
-The Step 6 training loop only measures the CNN's own linear head (one
-Linear layer on top of the 128-D embedding).  That is a weak classifier
-deliberately kept simple so the embedding head learns general features
-rather than overfitting to the classification task.
-
-Step 6b asks: how much PDAC signal do the embeddings contain when you
-give them a proper classifier?  The answer becomes the CNN-only baseline
-in your thesis ablation table:
-
-  Radiomic only  (Step 5b best model)  → AUC ~ 0.57
-  CNN only       (Step 6b best model)  → AUC ~ ?
-  Fusion         (Step 7)              → AUC ~ ?
-
-Without Step 6b you cannot prove the fusion is better than either
-branch alone.
-
 Metrics reported
 ----------------
   ROC-AUC, Average Precision, Brier Score,
