@@ -249,38 +249,46 @@ def main():
                 "note"              : str(e)
             })
 
-# ── Save report ───────────────────────────────────────────────────────────
-df = pd.DataFrame(records)
-df = df.sort_values("outside_pct", ascending=False)
-df.to_csv(args.output_csv, index=False)
+    # ── Save report ───────────────────────────────────────────────────────────
+    df = pd.DataFrame(records)
+    df = df.sort_values("outside_pct", ascending=False)
+    df.to_csv(args.output_csv, index=False)
 
-# ── Print summary ─────────────────────────────────────────────────────────
-total = len(case_ids)
-print("\n" + "=" * 65)
-print("LABEL CONTAINMENT CHECK — SUMMARY")
-print("=" * 65)print(f"  Total cases checked  : {total}")
-print(f"  PASS                 : {n_pass:>5}  ({100n_pass/total:.1f}%)  
-      "f"all tumor voxels nest within pancreas bounding limits")
-print(f"  WARN                 : {n_warn:>5}  ({100n_warn/total:.1f}%)  
-"f"≤{WARN_THRESHOLD}% outside BBox (minor boundaries edge artifact)")
-print(f"  FAIL                 : {n_fail:>5}  ({100*n_fail/total:.1f}%)  
-"f">{FAIL_THRESHOLD}% outside BBox — severe misalignment")
-print(f"  SKIP (no label 1)    : {n_skip:>5}  non-PDAC or mislabeled")
-print(f"  NOT FOUND            : {n_not_found:>5}  label file missing")
-print(f"\nReport saved to: {args.output_csv}")
-if n_fail > 0:
-  print(f"\nTop FAIL cases (largest % outside pancreas BBox):")
-  fail_df = df[df["verdict"] == "FAIL"].head(10)
-  for _, row in fail_df.iterrows():
-    print(f"  {row['case_id']:<25}  "f"tumor={row['n_tumor_voxels']:,}  
-    "f"outside_bbox={row['n_outside_pancreas']:,}  
-    "f"({row['outside_pct']:.2f}%)")
+    # ── Print summary ─────────────────────────────────────────────────────────
+    total = len(case_ids)
+    print("\n" + "=" * 65)
+    print("LABEL CONTAINMENT CHECK — SUMMARY")
+    print("=" * 65)
+    print(f"  Total cases checked  : {total}")
+    print(f"  PASS                 : {n_pass:>5}  ({100*n_pass/total:.1f}%)  "
+          f"all tumor voxels inside pancreas")
+    print(f"  WARN                 : {n_warn:>5}  ({100*n_warn/total:.1f}%)  "
+          f"≤{WARN_THRESHOLD}% outside (boundary artefact)")
+    print(f"  FAIL                 : {n_fail:>5}  ({100*n_fail/total:.1f}%)  "
+          f">{FAIL_THRESHOLD}% outside — review needed")
+    print(f"  SKIP (no label 1)    : {n_skip:>5}  non-PDAC or mislabeled")
+    print(f"  NOT FOUND            : {n_not_found:>5}  label file missing")
+    print(f"\nReport saved to: {args.output_csv}")
+
+    if n_fail > 0:
+        print(f"\nTop FAIL cases (largest % outside pancreas):")
+        fail_df = df[df["verdict"] == "FAIL"].head(10)
+        for _, row in fail_df.iterrows():
+            print(f"  {row['case_id']:<25}  "
+                  f"tumor={row['n_tumor_voxels']:,}  "
+                  f"outside={row['n_outside_pancreas']:,}  "
+                  f"({row['outside_pct']:.2f}%)")
+
     if n_warn > 0:
-      print(f"\nWARN cases (minor boundary edge artifacts — safe to keep):")
-      warn_df = df[df["verdict"] == "WARN"].head(10)
+        print(f"\nWARN cases (minor boundary artefacts — likely safe to keep):")
+        warn_df = df[df["verdict"] == "WARN"].head(10)
         for _, row in warn_df.iterrows():
-          print(f"  {row['case_id']:<25}  "f"outside_bbox={row['n_outside_pancreas']}  "f"({row['outside_pct']:.2f}%)")
-          print("=" * 65)
+            print(f"  {row['case_id']:<25}  "
+                  f"outside={row['n_outside_pancreas']}  "
+                  f"({row['outside_pct']:.2f}%)")
 
-if name == "main":
-  main()
+    print("=" * 65)
+
+
+if __name__ == "__main__":
+    main()
