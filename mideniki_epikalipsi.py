@@ -66,7 +66,7 @@ def main():
         spine.set_color('#444444')
         
     plt.grid(True, color='#333333', linestyle='--', alpha=0.5)
-    plt.legend(facecolor='black', edgecolor='#444444', labelcolor='white', fontsize=11, loc='upper right')
+    #plt.legend(facecolor='black', edgecolor='#444444', labelcolor='white', fontsize=11, loc='upper right')
     
     # Προσθήκη ευκρινούς κειμένου απόδειξης
     proof_text = f"PROOF OF MUTUAL EXCLUSIVITY:\n• Shared/Overlapping Voxels = {overlap_count}\n• Voxel-Level Mixing = 0.00%"
