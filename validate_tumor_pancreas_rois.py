@@ -2,9 +2,10 @@
 """
 validate_tumor_pancreas_rois.py
 
-QC check on the ROIs produced by allilouia.py: for every PDAC case
-(label 1 present), quantify the spatial relationship between the tumor
-mask (label 1) and the pancreas mask (label 4).
+QC check on the ROIs produced by allilouia__2_.py: for every PDAC case
+(label 1 present) listed in a case-id file, quantify the spatial
+relationship between the tumor mask (label 1) and the pancreas mask
+(label 4).
 
 For each case, reports:
   - n_label1, n_label4          : raw voxel counts
@@ -29,8 +30,9 @@ Across the full dataset it also reports how many of the N PDAC cases have
 any label1/label4 overlap at all.
 
 Usage:
-    python validate_tumor_pancreas_rois.py \
-        --label_dir /path/to/panorama_labels/automatic_labels \
+    python check_label_containment.py \
+        --label_dir /path/to/panorama_labels \
+        --case_list /path/to/pdac_case_ids.txt \
         --out_dir ./roi_validation
 """
 
@@ -76,6 +78,27 @@ def case_stem_of(path):
     if base.endswith(".nii"):
         return base[:-4]
     return base.split(".")[0]
+
+
+def load_case_ids(case_list_path):
+    """Read PDAC case ids from a text file, one id per line.
+
+    Blank lines and lines starting with '#' are ignored. Ids are also
+    normalised by stripping a trailing .nii/.nii.gz if present, so the
+    list file can contain either bare case ids or filenames.
+    """
+    ids = set()
+    with open(case_list_path, "r") as f:
+        for line in f:
+            line = line.strip()
+            if not line or line.startswith("#"):
+                continue
+            if line.endswith(".nii.gz"):
+                line = line[:-7]
+            elif line.endswith(".nii"):
+                line = line[:-4]
+            ids.add(line)
+    return ids
 
 
 def analyze_case(mask):
@@ -139,6 +162,10 @@ def main():
     )
     parser.add_argument("--label_dir", required=True,
                          help="Path to a single label file, or a directory of label files.")
+    parser.add_argument("--case_list", default=None,
+                         help="Optional path to a text file of PDAC case ids (one per line). "
+                              "If given, only label files whose case id appears in this file "
+                              "are processed.")
     parser.add_argument("--out_dir", default=".", help="Where to save the CSV and plots.")
     args = parser.parse_args()
 
@@ -147,6 +174,24 @@ def main():
     if not label_files:
         print(f"No .nii/.nii.gz files found at {args.label_dir}")
         return
+
+    if args.case_list:
+        wanted_ids = load_case_ids(args.case_list)
+        print(f"Loaded {len(wanted_ids)} case id(s) from {args.case_list}")
+        before = len(label_files)
+        label_files = [fp for fp in label_files if case_stem_of(fp) in wanted_ids]
+        found_ids = {case_stem_of(fp) for fp in label_files}
+        missing_ids = wanted_ids - found_ids
+        print(f"Matched {len(label_files)} / {before} label file(s) to the case list.")
+        if missing_ids:
+            print(f"WARNING: {len(missing_ids)} case id(s) from {args.case_list} "
+                  f"were not found under {args.label_dir}:")
+            for cid in sorted(missing_ids):
+                print(f"  - {cid}")
+        if not label_files:
+            print("No label files match the given case list. Nothing to do.")
+            return
+
     print(f"Found {len(label_files)} label file(s). Checking PDAC cases (label 1 present)...")
 
     rows = []
