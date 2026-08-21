@@ -9,7 +9,7 @@ from scipy.ndimage import center_of_mass
 # ─────────────────────────────────────────────────────────────────────────────
 # Αλλάξτε το path με τη διαδρομή που έχετε το αρχείο μάσκας του συγκεκριμένου case
 CASE_ID = "100196_00001"
-LABEL_DIR = "/home/student1/ftzina_thesis/outputs/panorama_labels/automatic_labels" 
+LABEL_DIR = "/home/student1/ftzina_thesis/codes/panorama_labels/automatic_labels/100196_00001.nii.gz" 
 
 TUMOR_LABEL = 1
 PANCREAS_LABEL = 4
