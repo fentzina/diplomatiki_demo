@@ -7,8 +7,8 @@ from scipy.ndimage import center_of_mass
 # CONFIGURATION
 # ─────────────────────────────────────────────────────────────────────────────
 # Το ακριβές μονοπάτι του αρχείου NIfTI που μου έδωσες
-MASK_PATH = "/home/student1/ftzina_thesis/codes/panorama_labels/automatic_labels/102218_00001.nii.gz"
-CASE_ID = "102218_00001"
+MASK_PATH = "/home/student1/ftzina_thesis/codes/panorama_labels/automatic_labels/101068_00001.nii.gz"
+CASE_ID = "101068_00001"
 
 TUMOR_LABEL = 1
 PANCREAS_LABEL = 4
