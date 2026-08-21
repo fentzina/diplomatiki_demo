@@ -375,12 +375,11 @@ def process_case(ct_path, label_path, output_dir, case_id):
     resampled_labels_numpy = sitk.GetArrayFromImage(labels_resampled_sitk)
 
     # Build tumor and pancreas segmentation masks
-    tumor_3d_mask = (resampled_labels_numpy == TUMOR_LABEL)
+    #tumor_3d_mask = (resampled_labels_numpy == TUMOR_LABEL) #combined_mask_labels_1_4_3d = tumor_3d_mask | pancreas_3d_mask
     pancreas_3d_mask = (resampled_labels_numpy == PANCREAS_LABEL)
-    combined_mask_labels_1_4_3d = tumor_3d_mask | pancreas_3d_mask
-
+    
     # Define Crop Coordinates
-    guide_mask = combined_mask_labels_1_4_3d.astype(bool) if is_pdac_case else pancreas_3d_mask.astype(bool)
+    guide_mask = pancreas_3d_mask.astype(bool) # guide_mask = combined_mask_labels_1_4_3d.astype(bool) if is_pdac_case else pancreas_3d_mask.astype(bool)
     z_start, z_end, y_start, y_end, x_start, x_end = get_crop_coords(guide_mask, TARGET_SHAPE)
 
     # Clip HU intensities
