@@ -6,8 +6,8 @@ from scipy.ndimage import center_of_mass
 # ─────────────────────────────────────────────────────────────────────────────
 # CONFIGURATION
 # ─────────────────────────────────────────────────────────────────────────────
-MASK_PATH = "/home/student1/ftzina_thesis/codes/panorama_labels/automatic_labels/100196_00001.nii.gz"
-CASE_ID = "100196_00001"
+MASK_PATH = "/home/student1/ftzina_thesis/codes/panorama_labels/manual_labels/100545_00001.nii.gz"
+CASE_ID = "100545_00001"
 
 TUMOR_LABEL = 1
 PANCREAS_LABEL = 4
