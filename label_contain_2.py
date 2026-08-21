@@ -5,6 +5,13 @@ Verifies that for every PDAC case, the tumor mask (label 1)
 is anatomically nested within the pancreas mask (label 4) volume context,
 accounting for the PANORAMA "Donut Effect" (0% voxel overlap).
 
+Έλεγχος Ανατομικού Bounding Box: Αντί για pixel-level overlap (το οποίο είναι πάντα 0% στο PANORAMA), 
+ο κώδικας τώρα ελέγχει αν ο όγκος βρίσκεται ανατομικά μέσα στο 3D Bounding Box του παγκρέατος.
+Strict Boundary Containment (Μέσω Dilated Mask): Για να είμαστε 100% σίγουροι ότι ο όγκος δεν είναι απλά 
+κάπου τυχαία μέσα στο BBox αλλά εφάπτεται/αγκαλιάζεται άμεσα από το πάγκρεας, εφαρμόζεται μια μικρή διαστολή 
+(binary dilation 2 pixels) στο πάγκρεας. 
+Έτσι ελέγχουμε αν ο όγκος "κουμπώνει" στη γειτονιά του παγκρεατικού ιστού.
+
 Specifically checks:
   - Voxels with label 1 that sit completely OUTSIDE the 3D Bounding Box of label 4.
   - Voxels with label 1 that have NO label 4 in their immediate 2-voxel 
