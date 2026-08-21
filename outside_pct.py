@@ -1,5 +1,5 @@
 import pandas as pd
-df = pd.read_csv('label_containment_report.csv')
+df = pd.read_csv('label_containment_report_auto.csv') # label_containment_report.csv #manual
 fail_df = df[df['verdict'] == 'FAIL']
 print(fail_df['outside_pct'].describe())
 print('\nCases with exactly 100% outside:', (fail_df['outside_pct'] == 100.0).sum())
