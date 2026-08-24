@@ -5,12 +5,13 @@ import pandas as pd
 from tqdm import tqdm
 from scipy.ndimage import distance_transform_edt
 
-
+# ─────────────────────────────────────────────────────────────────────────────
 # CONFIGURATION
+# ─────────────────────────────────────────────────────────────────────────────
 # Ορίστε το κεντρικό path των labels (το script θα ψάξει αυτόματα σε auto και manual)
 LABEL_DIR = "/home/student1/ftzina_thesis/codes/panorama_labels"
 # Το CSV report που παρήγαγες από το προηγούμενο βήμα
-INPUT_CSV = "pwf_report.csv"
+INPUT_CSV = "check_PWF_ALL.csv"
 OUTPUT_CSV = "secondary_qc_report.csv"
 
 DISTANCE_THRESHOLD_MM = 3.0  # Αυστηρό κλινικό όριο (3 χιλιοστά)
@@ -57,7 +58,7 @@ def trustworthy_secondary_check(mask_path):
 
 def main():
     if not os.path.exists(INPUT_CSV):
-        print(f"Δεν βρέθηκε το αρχείο {INPUT_CSV}! Τρέξτε πρώτα το κεντρικό "check_label_containment.py")
+        print(f"Δεν βρέθηκε το αρχείο {INPUT_CSV}! Τρέξτε πρώτα το κεντρικό check_PWF.py .")
         return
         
     # Φόρτωση του προηγούμενου report
