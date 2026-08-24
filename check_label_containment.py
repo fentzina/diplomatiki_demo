@@ -161,7 +161,7 @@ def main():
     parser.add_argument("--case_list",  default=None,
                         help="Optional: path to a .txt file with one case_id per line. "
                              "If not provided, all label files in --label_dir are scanned.")
-    parser.add_argument("--output_csv", default="label_containment_report.csv",
+    parser.add_argument("--output_csv", default="label_containment_report_auto.csv",
                         help="Path for the output CSV report.")
     args = parser.parse_args()
 
