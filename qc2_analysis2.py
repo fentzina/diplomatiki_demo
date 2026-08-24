@@ -114,4 +114,4 @@ if __name__ == "__main__":
      '102147_00001', '102160_00001', '102164_00001', '102167_00001', '102190_00001', '102195_00001', '102203_00001', '102204_00001',
      '102216_00001', '102218_00001']
 
-    run_qc2_analysis(LABEL_DIRECTORY, fail_cases, "qc2_fail_analysis_report_auto.csv")
+    run_qc2_analysis_with_distance(LABEL_DIRECTORY, fail_cases, "qc2_fail_analysis_report_auto.csv")
