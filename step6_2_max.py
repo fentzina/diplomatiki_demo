@@ -4,7 +4,7 @@
 
 Ένας συνδυασμός δύο αλλαγών:
 α. Aντί να υπολογίζω τον μέσο όρο των embeddings, κάθε patch θα τροφοδοτείται πλήρως μέσω του classifier head 
-παράγοντας 1 ανεξάρτητη πιθανότητα PDAC, και το ΜΑΞΙΜΟΥΜ αυτών των πιθανοτήτων αποτελεί την τελική πρόβλεψη ανά ασθενή, 
+παράγοντας 1 ανεξάρτητη πιθανότητα PDAC, και το maximum αυτών των πιθανοτήτων αποτελεί την τελική πρόβλεψη ανά ασθενή, 
 και β. ταυτόχρονα, να χρησιμοποιησω 4 patches και στο validation/test, 
 αντί για ένα μόνο centroid patch (έτσι ωστε η διαδικασία είναι πανομοιότυπη και στα τρία subsets).
 
@@ -18,7 +18,7 @@ Output : best_cnn.pt
          zscore_stats.npz                     → CT_MEAN, CT_STD from training set
 
 Patch strategy (CHANGED from original):
-  - Training : 4 random patches per case → 4 probabilities → mean → (N,1)
+  - Training : 4 random patches per case → 4 probabilities → max → (N,1)
   - Val/Test : 4 seeded-random patches per case (deterministic, per-case seed)
                → 4 probabilities → mean → (N,1)
                CHANGED from: 1 centroid patch → 1 embedding
