@@ -11,7 +11,7 @@ from scipy.ndimage import distance_transform_edt
 # Ορίστε το κεντρικό path των labels (το script θα ψάξει αυτόματα σε auto και manual)
 LABEL_DIR = "/home/student1/ftzina_thesis/codes/panorama_labels"
 # Το CSV report που παρήγαγες από το προηγούμενο βήμα
-INPUT_CSV = "check_PWF_ALL.csv"
+INPUT_CSV = "check_PWF_all.csv"
 OUTPUT_CSV = "secondary_qc_report.csv"
 
 DISTANCE_THRESHOLD_MM = 3.0  # Αυστηρό κλινικό όριο (3 χιλιοστά)
@@ -62,7 +62,7 @@ def main():
         return
         
     # Φόρτωση του προηγούμενου report
-    df = pd.read_csv(INPUT_CSV)
+    df = pd.read_csv(INPUT_CSV, sep=";")
     
     # Απομόνωση ΜΟΝΟ των FAIL περιπτώσεων
     fail_df = df[df["verdict"] == "FAIL"].copy()
