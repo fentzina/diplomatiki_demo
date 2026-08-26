@@ -9,7 +9,7 @@ import shutil
 # =================────────────────────────────────────────────────=============
 # Παράδειγμα Linux διαδρομών: "/home/username/data/heterogeneity"
 INPUT_DIR  = "/home/student1/ftzina_thesis/outputs/pdac_cases_ids.txt"
-OUTPUT_DIR = "/home/student1/ftzina_thesis/output_pdac"
+OUTPUT_DIR = "/home/student1/ftzina_thesis/output_pdac/intra_tumor_589_PDACs"
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 # Το όνομα του αρχείου .txt που περιέχει μόνο τα 589 έγκυρα IDs (ένα ανά γραμμή)
